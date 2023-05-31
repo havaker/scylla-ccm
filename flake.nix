@@ -9,7 +9,9 @@ localhost.";
 
   outputs = { self, nixpkgs, flake-utils }:
     let
-      make_ccm_package = pkgs: pkgs.python3Packages.buildPythonApplication {
+      make_ccm_package = doCheck: pkgs: pkgs.python3Packages.buildPythonApplication {
+        inherit doCheck;
+
         pname = "scylla-ccm";
         version = "0.1";
 
@@ -19,8 +21,6 @@ localhost.";
         propagatedBuildInputs =  with pkgs.python3Packages; [ pyyaml psutil six requests packaging boto3 tqdm setuptools ];
 
         disabledTestPaths = [ "old_tests/*.py" ];
-
-        doCheck = false;
       };
     in
     flake-utils.lib.eachDefaultSystem (system:
@@ -29,13 +29,13 @@ localhost.";
       in
       {
         packages = rec {
-          scylla_ccm = make_ccm_package pkgs;
+          scylla_ccm = make_ccm_package true pkgs;
           default = scylla_ccm;
         };
       }
     ) // rec {
       overlays.default = final: prev: {
-        scylla_ccm = make_ccm_package final;
+        scylla_ccm = make_ccm_package false final;
       };
     };
 }
