@@ -12,7 +12,7 @@ localhost.";
       make_ccm_package = doCheck: pkgs: pkgs.python3Packages.buildPythonApplication {
         inherit doCheck;
 
-        pname = "scylla-ccm";
+        pname = "scylla_ccm";
         version = "0.1";
 
         src = ./. ;
@@ -21,6 +21,9 @@ localhost.";
         propagatedBuildInputs =  with pkgs.python3Packages; [ pyyaml psutil six requests packaging boto3 tqdm setuptools ];
 
         disabledTestPaths = [ "old_tests/*.py" ];
+
+        # Make `nix run` aware that the binary is called `ccm`.
+        meta.mainProgram = "ccm";
       };
     in
     flake-utils.lib.eachDefaultSystem (system:
@@ -33,7 +36,7 @@ localhost.";
           default = scylla_ccm;
         };
         checks = {
-          scylla_ccm = make_ccm_package true pkgs;
+          scylla_ccm_with_tests = make_ccm_package true pkgs;
         };
       }
     ) // rec {
