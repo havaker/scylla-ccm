@@ -29,8 +29,11 @@ localhost.";
       in
       {
         packages = rec {
-          scylla_ccm = make_ccm_package true pkgs;
+          scylla_ccm = make_ccm_package false pkgs;
           default = scylla_ccm;
+        };
+        checks = {
+          scylla_ccm = make_ccm_package true pkgs;
         };
       }
     ) // rec {
