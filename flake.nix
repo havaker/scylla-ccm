@@ -9,7 +9,7 @@ localhost.";
 
   outputs = { self, nixpkgs, flake-utils }:
     let
-      make_ccm_package = doCheck: pkgs: pkgs.python3Packages.buildPythonApplication {
+      make_ccm_package = {pkgs, doCheck ? false} : pkgs.python3Packages.buildPythonApplication {
         inherit doCheck;
 
         pname = "scylla_ccm";
@@ -25,6 +25,11 @@ localhost.";
         # Make `nix run` aware that the binary is called `ccm`.
         meta.mainProgram = "ccm";
       };
+      make_wrapped = {pkgs} : pkgs.buildFHSUserEnv {
+        name = "scylla_ccm";
+        targetPkgs = pkgs: [(make_ccm_package { inherit pkgs; }) pkgs.jdk8 pkgs.jdk11];
+        runScript = "ccm";
+      };
     in
     flake-utils.lib.eachDefaultSystem (system:
       let 
@@ -32,16 +37,16 @@ localhost.";
       in
       {
         packages = rec {
-          scylla_ccm = make_ccm_package false pkgs;
+          scylla_ccm = make_wrapped {inherit pkgs;};
           default = scylla_ccm;
         };
         checks = {
-          scylla_ccm_with_tests = make_ccm_package true pkgs;
+          scylla_ccm_with_tests = make_wrapped {inherit pkgs; doCheck = true;};
         };
       }
     ) // rec {
       overlays.default = final: prev: {
-        scylla_ccm = make_ccm_package false final;
+        scylla_ccm = make_wrapped {pkgs = final;};
       };
     };
 }
